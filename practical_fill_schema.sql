@@ -919,10 +919,7 @@ select
 from customer_order_products
 group by customer_id;
 
-create view product_alcohol_bac
-as
-with
-   function gram_alcohol (
+create or replace function gram_alcohol (
       p_volume in number
     , p_abv    in number
    ) return number deterministic
@@ -930,31 +927,36 @@ with
    begin
       return p_volume * p_abv / 100 * 0.789;
    end;
-   function gram_body_fluid (
-      p_weight in number
-    , p_gender in varchar2
+/   
+create or replace function gram_body_fluid (
+   p_weight in number
+   , p_gender in varchar2
    ) return number deterministic
    is
    begin
       return p_weight * 1000 * case p_gender
-                                  when 'M' then 0.68
-                                  when 'F' then 0.55
-                               end;
+                                    when 'M' then 0.68
+                                    when 'F' then 0.55
+                                 end;
    end;
-   function bac (
-      p_volume in number
-    , p_abv    in number
-    , p_weight in number
-    , p_gender in varchar2
+/
+create or replace function bac (
+   p_volume in number
+   , p_abv    in number
+   , p_weight in number
+   , p_gender in varchar2
    ) return number deterministic
    is
    begin
       return round(
          100 * gram_alcohol(p_volume, p_abv)
-          / gram_body_fluid(p_weight, p_gender)
-       , 3
+            / gram_body_fluid(p_weight, p_gender)
+         , 3
       );
    end;
+/
+create or replace view product_alcohol_bac
+as   
 select
    pa.product_id
  , pa.sales_volume
